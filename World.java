@@ -1,38 +1,42 @@
-public class World
-{
+public class World {
     private final int width;
     private final int height;
-    private final int[][] terrain; // 0 = water, 1 = grass, 2 = mountain
+    private double[][] elevation;
 
-    public World(int width, int height, long seed)
-    {
+    public World(int width, int height, long seed) {
         this.width = width;
         this.height = height;
-        this.terrain = new int[width][height];
-
+        this.elevation = new double[height][width];
         generateTerrain(seed);
     }
-    // penis
-    private void generateTerrain(long seed)
-    {
+
+    private void generateTerrain(long seed) {
         PerlinNoise perlin = new PerlinNoise(seed);
-        double frequency = 0.2; // Higher frequency = more zoomed in
 
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                double value = perlin.noise(x * frequency, y * frequency);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                double nx = (double) x / width - 0.5;
+                double ny = (double) y / height - 0.5;
 
-                if (value < -0.1)       terrain[x][y] = 0; // water
-                else if (value < 0.4)   terrain[x][y] = 1; // grass
-                else                    terrain[x][y] = 2; // mountain
+                // More octaves for detail
+                double frequency1 = 0.125;
+                double frequency2 = frequency1 / 2;
+                double frequency3 = frequency2 / 2;
+                double frequency4 = frequency3 / 2;
+
+                double e =
+                    frequency1 * perlin.noise((1 / frequency1) * nx, (1 / frequency1) * ny) +
+                    frequency2 * perlin.noise((1 / frequency2) * nx, (1 / frequency2) * ny) +
+                    frequency3 * perlin.noise((1 / frequency3) * nx, (1 / frequency3) * ny) +
+                    frequency4 * perlin.noise((1 / frequency4) * nx, (1 / frequency4) * ny);
+
+                e /= (frequency1 + frequency2 + frequency3 + frequency4); // normalize
+                elevation[y][x] = e;
             }
         }
     }
 
-    public int getTile(int x, int y) { return terrain[x][y]; }
+    public double getElevation(int x, int y) { return elevation[y][x]; }
     public int getWidth() { return width; }
     public int getHeight() { return height; }
-
 }
